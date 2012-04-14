@@ -123,23 +123,55 @@ def play1():
     finally:
         pygame.quit()
 
-def main():
-
-	x_size = 1000
-	y_size = 800
+class DisplaySpace:
+	def __init__(self, x_real_size, y_real_size, z_real_size, x_view_size = 1000, y_view_size = 800, z_view_size = 800, color = (0, 255, 0)):
+		self.x_real_size = x_real_size
+		self.y_real_size = y_real_size		
+		self.z_real_size = z_real_size
+		self.x_view_size = x_view_size
+		self.y_view_size = y_view_size
+		self.z_view_size = z_view_size
+		self.color = color
+		pygame.init()
+		
+		self.screen = pygame.display.set_mode((self.x_view_size, self.y_view_size))
+		self.screen.fill((0, 0, 0))
+		self.s = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA, 32)
+		pygame.gfxdraw.aacircle(self.s, self.x_view_size/2, self.y_view_size/2, 4, (0, 255, 0))  
+		self.screen.blit(self.s, (0, 0))
+		pygame.display.flip()
 	
-	pygame.init()
-	screen = pygame.display.set_mode((x_size,y_size))
-	screen.fill((0, 0, 0))
-	s = pygame.Surface(screen.get_size(), pygame.SRCALPHA, 32)
-	pygame.gfxdraw.aacircle(s, 250, 250, 200, (0, 0, 0))
-	pygame.gfxdraw.aacircle(s, x_size/2, y_size/2, 4, (0, 255, 0))	
-	screen.blit(s, (0, 0))
-	pygame.display.flip()
+	def DrawPoint(self, x, y, z):
+		pygame.gfxdraw.aacircle(self.s, int((self.x_view_size/self.x_real_size)*x) + self.x_view_size/2, int((self.y_view_size/self.y_real_size)*y) + self.y_view_size/2, 1, self.color)
+		self.screen.blit(self.s, (0, 0))
+		pygame.display.flip()
+	def ClearPoint(self, x, y, z):
+		pygame.gfxdraw.aacircle(self.s, int((self.x_view_size/self.x_real_size)*x) + self.x_view_size/2, int((self.y_view_size/self.y_real_size)*y) + self.y_view_size/2, 1, (0,0,0))
+		self.screen.blit(self.s, (0, 0))
+		pygame.display.flip()
+	
+	def DrawPoints(self,points):
+		for p in points:
+			self.DrawPoint(p[0], p[1], p[2])
+	def Clear(self):
+		self.screen.fill((0, 0, 0))	
+		self.screen.blit(self.s, (0, 0))
+		pygame.display.flip()
 
 
-	r0 = Vector([5.0, 0.0, 10.0])
-	v0 = Vector([0.0, -0.028, 0.0])
+class MaterialPoint():
+	def __init__(self, mass, position, velocity):
+		self.m = mass
+		self.r = position
+		self.v = velocity
+
+def main():
+	space = DisplaySpace(30,30,0)
+
+	p = MaterialPoint(2,0,0)
+
+	r0 = Vector([5.0, 0.0, 0.0])
+	v0 = Vector([0.0, -0.07, -0.0])
 	a  = Vector([0.0, 0.0, 0.0])
 	
 	gama = 0.0000234
@@ -147,28 +179,29 @@ def main():
 	m = 2
 	
 	t = 0.0
-	dt = 0.01
+	dt = 0.001
+
+	i = 0
 	
 	r = r0
 	v = v0
 
-	while(1):	
-		x = int(10*r[0])+x_size/2
-		y = int(10*r[1])+y_size/2
-		pygame.gfxdraw.aacircle(s, x, y, 1, (0, 255, 0))
-		screen.blit(s, (0, 0))
-		pygame.display.flip()
-		
+	rs = []
+
+	while(1):
+		i = i + 1
+		r_tmp = r	
+		#if(i%100 == 0):
+		space.DrawPoint(r[0],r[1],r[2])
+		#rs.append(r)		
 		a = - gama*M*r/( r*r * sqrt(r*r) )
 		r0 = r
 		v0 = v
 		r = r0 + v0*t + (a*t*t)
 		v = v0 + a*t
 		t = t + dt
-		
-		pygame.gfxdraw.aacircle(s, x, y, 1, (0, 0, 0))
-		screen.blit(s, (0, 0))
-		pygame.display.flip()
+		#space.ClearPoint(r_tmp[0],r_tmp[1],r_tmp[2])
+		space.Clear()
 	    
 	return 0
 
