@@ -137,12 +137,15 @@ class DisplaySpace:
 		self.screen = pygame.display.set_mode((self.x_view_size, self.y_view_size))
 		self.screen.fill((0, 0, 0))
 		self.s = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA, 32)
-		pygame.gfxdraw.aacircle(self.s, self.x_view_size/2, self.y_view_size/2, 4, (0, 255, 0))  
+		#pygame.gfxdraw.aacircle(self.s, self.x_view_size/2, self.y_view_size/2, 4, (0, 255, 0))  
 		self.screen.blit(self.s, (0, 0))
 		pygame.display.flip()
 	
 	def DrawPoint(self, x, y, z):
-		pygame.gfxdraw.aacircle(self.s, int((self.x_view_size/self.x_real_size)*x) + self.x_view_size/2, int((self.y_view_size/self.y_real_size)*y) + self.y_view_size/2, 1, self.color)
+		px = int((self.x_view_size/self.x_real_size)*x) + self.x_view_size/2
+		py = int((self.y_view_size/self.y_real_size)*y) + self.y_view_size/2
+		#print px, py
+		pygame.gfxdraw.aacircle(self.s, px, py, 1, self.color)
 		self.screen.blit(self.s, (0, 0))
 		pygame.display.flip()
 	def ClearPoint(self, x, y, z):
@@ -160,48 +163,59 @@ class DisplaySpace:
 
 
 class MaterialPoint():
-	def __init__(self, mass, position, velocity):
+	def __init__(self, mass, position, velocity, acceleration):
 		self.m = mass
 		self.r = position
 		self.v = velocity
+		self.a = acceleration
 
 def main():
-	space = DisplaySpace(30,30,0)
+	space = DisplaySpace(4*152098232000.0,4*152098232000.0,0)
 
-	p = MaterialPoint(2,0,0)
+	sun = MaterialPoint(1.98892e30, Vector([0.0, 0.0, 0.0]), Vector([0.0, 0.0, 0.0]), Vector([0.0, 0.0, 0.0]))
+	earth = MaterialPoint(5.9742e24, Vector([152098232000.0, 0.0, 0.0]), Vector([0.0, -29000.78, 0.0]), Vector([0.0, 0.0, 0.0]))
 
-	r0 = Vector([5.0, 0.0, 0.0])
-	v0 = Vector([0.0, -0.07, -0.0])
-	a  = Vector([0.0, 0.0, 0.0])
-	
-	gama = 0.0000234
-	M = 1000
-	m = 2
+	venus = MaterialPoint(4.8685e24, Vector([108942109000.0, 0.0, 0.0]), Vector([0.0, -35000.02, 0.0]), Vector([0.0, 0.0, 0.0]))
+
+	mars = MaterialPoint(5.9742e24, Vector([152098232000.0, 2*152098232000.0, 0.0]), Vector([0.0, -29000.78, 0.0]), Vector([0.0, 0.0, 0.0]))
+
+	bodies = [sun, earth, venus, mars ]
+         	
+        gamma = 6.67300e-11 # m3 kg-1 s-2
 	
 	t = 0.0
-	dt = 0.001
+	dt = 360
 
-	i = 0
+	while(1):	
+		for bodie in bodies:		
+			space.DrawPoint(bodie.r[0],bodie.r[1],bodie.r[2])
+			#print bodie.r[0],bodie.r[1],bodie.r[2]
+
+		for bodie1 in bodies:
+			bodie1.a = Vector([0.0, 0.0, 0.0])
+                        for bodie2 in bodies:
+				if bodie2 != bodie1:
+					r = bodie2.r - bodie1.r
+					#print bodie1.a
+					bodie1.a = bodie1.a + gamma*bodie2.m*r/( r*r * sqrt(r*r) )
+
+#		bodies[0].a = Vector([0.0, 0.0, 0.0])
+#		bodies[1].a = Vector([0.0, 0.0, 0.0])
+		
+#		r = bodies[1].r - bodies[0].r
+#		bodies[0].a = bodies[0].a + gamma*bodies[1].m*r/( r*r * sqrt(r*r) )
 	
-	r = r0
-	v = v0
+#		r = bodies[0].r - bodies[1].r
+#		bodies[1].a = bodies[1].a + gamma*(bodies[0].m)*r/( r*r * sqrt(r*r) )
+		#print bodies[1].a
 
-	rs = []
+		for bodie in bodies:
+			bodie.r = bodie.r + bodie.v*t + (bodie.a*t*t)
+			bodie.v = bodie.v + bodie.a*t
 
-	while(1):
-		i = i + 1
-		r_tmp = r	
-		#if(i%100 == 0):
-		space.DrawPoint(r[0],r[1],r[2])
-		#rs.append(r)		
-		a = - gama*M*r/( r*r * sqrt(r*r) )
-		r0 = r
-		v0 = v
-		r = r0 + v0*t + (a*t*t)
-		v = v0 + a*t
 		t = t + dt
 		#space.ClearPoint(r_tmp[0],r_tmp[1],r_tmp[2])
-		space.Clear()
+		print t
 	    
 	return 0
 
