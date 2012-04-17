@@ -95,33 +95,6 @@ class Vector:
 
 		data.append(self.data[idx_a] * other[idx_b] - self.data[idx_c] * other[idx_d])
 	return Vector(data)
-	
-i = Vector([1.0, 0.0, 0.0])
-j = Vector([0.0, 1.0, 0.0])
-k = Vector([0.0, 0.0, 1.0])
-
-def v2(x):
-	return (2*i+3*j+x*k)*x
-
-def play1():
-    pygame.init()
-    screen = pygame.display.set_mode((500,500))
-    screen.fill((255, 0, 0))
-    s = pygame.Surface(screen.get_size(), pygame.SRCALPHA, 32)
-    pygame.gfxdraw.aacircle(s, 250, 250, 200, (0, 0, 0))
-    screen.blit(s, (0, 0))
-    pygame.display.flip()
-    try:
-        while 1:
-            event = pygame.event.wait()
-            if event.type == pygame.QUIT:
-                break
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE or event.unicode == 'q':
-                    break
-            pygame.display.flip()
-    finally:
-        pygame.quit()
 
 class DisplaySpace:
 	def __init__(self, x_real_size, y_real_size, z_real_size, x_view_size = 1000, y_view_size = 800, z_view_size = 800, color = (0, 255, 0)):
@@ -141,82 +114,78 @@ class DisplaySpace:
 		self.screen.blit(self.s, (0, 0))
 		pygame.display.flip()
 	
-	def DrawPoint(self, x, y, z):
+	def DrawPoint(self, x, y, z, color):
 		px = int((self.x_view_size/self.x_real_size)*x) + self.x_view_size/2
 		py = int((self.y_view_size/self.y_real_size)*y) + self.y_view_size/2
 		#print px, py
-		pygame.gfxdraw.aacircle(self.s, px, py, 1, self.color)
+		pygame.gfxdraw.aacircle(self.s, px, py, 1, color)
 		self.screen.blit(self.s, (0, 0))
 		pygame.display.flip()
+
 	def ClearPoint(self, x, y, z):
 		pygame.gfxdraw.aacircle(self.s, int((self.x_view_size/self.x_real_size)*x) + self.x_view_size/2, int((self.y_view_size/self.y_real_size)*y) + self.y_view_size/2, 1, (0,0,0))
 		self.screen.blit(self.s, (0, 0))
 		pygame.display.flip()
 	
-	def DrawPoints(self,points):
+	def DrawPoints(self, points):
 		for p in points:
-			self.DrawPoint(p[0], p[1], p[2])
+			self.DrawPoint(p.r[0], p.r[1], p.r[2], p.color)
+
 	def Clear(self):
-		self.screen.fill((0, 0, 0))	
-		self.screen.blit(self.s, (0, 0))
+		self.screen.fill([0,0,0])
+		self.s.fill(0)
+                self.screen.blit(self.s, (0, 0))
+		#pygame.display.update()
 		pygame.display.flip()
 
-
 class MaterialPoint():
-	def __init__(self, mass, position, velocity, acceleration):
+	def __init__(self, mass, position, velocity, acceleration, color = (0,255,0)):
 		self.m = mass
 		self.r = position
 		self.v = velocity
 		self.a = acceleration
+		self.color = color
 
 def main():
+
+	red = (255,0,0)
+	green = (0,255,0)
+	blue = (0,0,255)
+	yellow = (0,127,127)
+
 	space = DisplaySpace(4*152098232000.0,4*152098232000.0,0)
 
-	sun = MaterialPoint(1.98892e30, Vector([0.0, 0.0, 0.0]), Vector([0.0, 0.0, 0.0]), Vector([0.0, 0.0, 0.0]))
-	earth = MaterialPoint(5.9742e24, Vector([152098232000.0, 0.0, 0.0]), Vector([0.0, -29000.78, 0.0]), Vector([0.0, 0.0, 0.0]))
+	sun = MaterialPoint(1.98892e30, Vector([0.0, 0.0, 0.0]), Vector([0.0, 0.0, 0.0]), Vector([0.0, 0.0, 0.0]), yellow)
 
-	venus = MaterialPoint(4.8685e24, Vector([108942109000.0, 0.0, 0.0]), Vector([0.0, -35000.02, 0.0]), Vector([0.0, 0.0, 0.0]))
+	mercury = MaterialPoint(3.3022e23, Vector([69816900000.0, 0.0, 0.0]), Vector([0.0, -47870, 0.0]), Vector([0.0, 0.0, 0.0]), yellow)
+	
+	earth = MaterialPoint(5.9742e24, Vector([152098232000.0, 0.0, 0.0]), Vector([0.0, -29000.78, 0.0]), Vector([0.0, 0.0, 0.0]), blue)
 
-	mars = MaterialPoint(5.9742e24, Vector([152098232000.0, 2*152098232000.0, 0.0]), Vector([0.0, -29000.78, 0.0]), Vector([0.0, 0.0, 0.0]))
+	venus = MaterialPoint(4.8685e24, Vector([108942109000.0, 0.0, 0.0]), Vector([0.0, -35000.02, 0.0]), Vector([0.0, 0.0, 0.0]), green)
 
-	bodies = [sun, earth, venus, mars ]
+	mars = MaterialPoint(6.4185e23, Vector([206644545000.0, 0.0, 0.0]), Vector([0.0, -26499, 0.0]), Vector([0.0, 0.0, 0.0]),red)
+
+	bodies = [sun, mercury, venus, earth, mars ]
          	
         gamma = 6.67300e-11 # m3 kg-1 s-2
 	
 	t = 0.0
-	dt = 360
+	dt = 100
 
 	while(1):	
-		for bodie in bodies:		
-			space.DrawPoint(bodie.r[0],bodie.r[1],bodie.r[2])
-			#print bodie.r[0],bodie.r[1],bodie.r[2]
-
+		space.DrawPoints(bodies)
+		
 		for bodie1 in bodies:
 			bodie1.a = Vector([0.0, 0.0, 0.0])
                         for bodie2 in bodies:
 				if bodie2 != bodie1:
 					r = bodie2.r - bodie1.r
-					#print bodie1.a
 					bodie1.a = bodie1.a + gamma*bodie2.m*r/( r*r * sqrt(r*r) )
-
-#		bodies[0].a = Vector([0.0, 0.0, 0.0])
-#		bodies[1].a = Vector([0.0, 0.0, 0.0])
-		
-#		r = bodies[1].r - bodies[0].r
-#		bodies[0].a = bodies[0].a + gamma*bodies[1].m*r/( r*r * sqrt(r*r) )
-	
-#		r = bodies[0].r - bodies[1].r
-#		bodies[1].a = bodies[1].a + gamma*(bodies[0].m)*r/( r*r * sqrt(r*r) )
-		#print bodies[1].a
-
-		for bodie in bodies:
-			bodie.r = bodie.r + bodie.v*t + (bodie.a*t*t)
-			bodie.v = bodie.v + bodie.a*t
+			bodie1.r = bodie1.r + bodie1.v*t + (bodie1.a*t*t)
+			bodie1.v = bodie1.v + bodie1.a*t
 
 		t = t + dt
-		#space.ClearPoint(r_tmp[0],r_tmp[1],r_tmp[2])
-		print t
-	    
+		space.Clear()
 	return 0
 
 if __name__ == '__main__':
