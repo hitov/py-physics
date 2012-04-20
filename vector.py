@@ -170,22 +170,26 @@ def main():
         gamma = 6.67300e-11 # m3 kg-1 s-2
 	
 	t = 0.0
-	dt = 100
+	dt = 3600*24
 
-	while(1):	
-		space.DrawPoints(bodies)
-		
+	while(1):
+		if(int(t)%(3600*24*365) == 0):
+			space.Clear()	
+			space.DrawPoints(bodies)
+		#print "Earth velocity = ", sqrt(earth.v*earth.v) / 1000, "km/s"
+		#print "Time = ", t / 3600 / 24 / 365, "yrs"
+
 		for bodie1 in bodies:
 			bodie1.a = Vector([0.0, 0.0, 0.0])
                         for bodie2 in bodies:
 				if bodie2 != bodie1:
 					r = bodie2.r - bodie1.r
 					bodie1.a = bodie1.a + gamma*bodie2.m*r/( r*r * sqrt(r*r) )
-			bodie1.r = bodie1.r + bodie1.v*t + (bodie1.a*t*t)
-			bodie1.v = bodie1.v + bodie1.a*t
+
+			bodie1.r = bodie1.r + bodie1.v*dt + (bodie1.a*dt*dt)
+			bodie1.v = bodie1.v + bodie1.a*dt
 
 		t = t + dt
-		space.Clear()
 	return 0
 
 if __name__ == '__main__':
