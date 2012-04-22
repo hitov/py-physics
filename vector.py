@@ -105,38 +105,23 @@ class DisplaySpace:
 		self.y_view_size = y_view_size
 		self.z_view_size = z_view_size
 		self.color = color
-		pygame.init()
 		
+		pygame.init()		
 		self.screen = pygame.display.set_mode((self.x_view_size, self.y_view_size))
 		self.screen.fill((0, 0, 0))
-		self.s = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA, 32)
-		#pygame.gfxdraw.aacircle(self.s, self.x_view_size/2, self.y_view_size/2, 4, (0, 255, 0))  
-		self.screen.blit(self.s, (0, 0))
-		pygame.display.flip()
 	
 	def DrawPoint(self, x, y, z, color):
 		px = int((self.x_view_size/self.x_real_size)*x) + self.x_view_size/2
 		py = int((self.y_view_size/self.y_real_size)*y) + self.y_view_size/2
-		#print px, py
-		pygame.gfxdraw.aacircle(self.s, px, py, 1, color)
-		self.screen.blit(self.s, (0, 0))
-		pygame.display.flip()
-
-	def ClearPoint(self, x, y, z):
-		pygame.gfxdraw.aacircle(self.s, int((self.x_view_size/self.x_real_size)*x) + self.x_view_size/2, int((self.y_view_size/self.y_real_size)*y) + self.y_view_size/2, 1, (0,0,0))
-		self.screen.blit(self.s, (0, 0))
-		pygame.display.flip()
+		pygame.draw.circle(self.screen, color, (px, py), 2, 2)
 	
 	def DrawPoints(self, points):
 		for p in points:
 			self.DrawPoint(p.r[0], p.r[1], p.r[2], p.color)
+		pygame.display.flip()
 
 	def Clear(self):
 		self.screen.fill([0,0,0])
-		self.s.fill(0)
-                self.screen.blit(self.s, (0, 0))
-		#pygame.display.update()
-		pygame.display.flip()
 
 class MaterialPoint():
 	def __init__(self, mass, position, velocity, acceleration, color = (0,255,0)):
@@ -151,9 +136,10 @@ def main():
 	red = (255,0,0)
 	green = (0,255,0)
 	blue = (0,0,255)
-	yellow = (0,127,127)
+	yellow = (255,255,0)
+	white = (255,255,255)
 
-	space = DisplaySpace(4*152098232000.0,4*152098232000.0,0)
+	space = DisplaySpace(3*152098232000.0,3*152098232000.0,0)
 
 	sun = MaterialPoint(1.98892e30, Vector([0.0, 0.0, 0.0]), Vector([0.0, 0.0, 0.0]), Vector([0.0, 0.0, 0.0]), yellow)
 
@@ -165,17 +151,30 @@ def main():
 
 	mars = MaterialPoint(6.4185e23, Vector([206644545000.0, 0.0, 0.0]), Vector([0.0, -26499, 0.0]), Vector([0.0, 0.0, 0.0]),red)
 
-	bodies = [sun, mercury, venus, earth, mars ]
-         	
+
+
+	moon = MaterialPoint(7.3477e22, Vector([152098232000.0 + 362570000, 0.0, 0.0]), Vector([0.0, -29000.78 + 1022, 0.0]), Vector([0.0, 0.0, 0.0]),white)
+
+	bodies = [sun, mercury, venus, earth, mars, moon]
+
+	
         gamma = 6.67300e-11 # m3 kg-1 s-2
 	
 	t = 0.0
-	dt = 3600*24
+	dt = 2600
+	i = 0	
+	running = True
+	
+	while(running):
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				running = False
 
-	while(1):
-		if(int(t)%(3600*24*365) == 0):
+		if(i%(10) == 0):
 			space.Clear()	
 			space.DrawPoints(bodies)
+
+
 		#print "Earth velocity = ", sqrt(earth.v*earth.v) / 1000, "km/s"
 		#print "Time = ", t / 3600 / 24 / 365, "yrs"
 
@@ -189,7 +188,8 @@ def main():
 			bodie1.r = bodie1.r + bodie1.v*dt + (bodie1.a*dt*dt)
 			bodie1.v = bodie1.v + bodie1.a*dt
 
-		t = t + dt
+		t += dt
+                i += 1
 	return 0
 
 if __name__ == '__main__':
