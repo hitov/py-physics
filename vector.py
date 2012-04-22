@@ -25,7 +25,7 @@ from numpy import *
 import pygame
 
 
-class Vector:
+class array:
     def __init__(self, data):
         self.data = data
     
@@ -39,7 +39,7 @@ class Vector:
         data = []
         for j in range(len(self.data)):
             data.append(self.data[j] + other.data[j])
-        return Vector(data)
+        return array(data)
 
     def __radd__(self, other):
         return( self.__add__(other) )
@@ -48,13 +48,13 @@ class Vector:
         data = []
         for j in range(len(self.data)):
             data.append(self.data[j] - other.data[j])
-        return Vector(data)
+        return array(data)
 
     def __rsub__(self, other):
         return( self.__sub__(other) )
     
     def __mul__(self, other):
-        if isinstance(other,Vector):
+        if isinstance(other,array):
             result = 0
             for j in range(len(self.data)):
                 result += self.data[j]*other.data[j]
@@ -63,13 +63,13 @@ class Vector:
             data = []
             for j in range(len(self.data)):
                 data.append(self.data[j]*other)
-            return Vector(data)
+            return array(data)
 
     def __div__(self, other):
         data = []
         for j in range(len(self.data)):
             data.append(self.data[j]/other)
-        return Vector(data)
+        return array(data)
            
     def __rmul__(self, other):
         return( self.__mul__(other) )
@@ -93,7 +93,7 @@ class Vector:
                 idx_d = length + idx_d
                 
             data.append(self.data[idx_a] * other[idx_b] - self.data[idx_c] * other[idx_d])
-        return Vector(data)
+        return array(data)
 
 class DisplaySpace:
     def __init__(self, x_real_size, y_real_size, z_real_size, x_view_size = 1000, y_view_size = 800, z_view_size = 800, color = (0, 255, 0)):
@@ -112,7 +112,7 @@ class DisplaySpace:
     def DrawPoint(self, x, y, z, color):
         px = int((self.x_view_size/self.x_real_size)*x) + self.x_view_size/2
         py = int((self.y_view_size/self.y_real_size)*y) + self.y_view_size/2
-        pygame.draw.circle(self.screen, color, (px, py), 2, 2)
+        pygame.draw.circle(self.screen, color, (px, py), 1, 1)
     
     def DrawPoints(self, points):
         for p in points:
@@ -138,28 +138,31 @@ def main():
     yellow = (255,255,0)
     white = (255,255,255)
 
-    space = DisplaySpace(3*152098232000.0,3*152098232000.0,0)
+    space = DisplaySpace(22*152098232000.0,22*152098232000.0,0)
 
-    sun = MaterialPoint(1.98892e30, Vector([0.0, 0.0, 0.0]), Vector([0.0, 0.0, 0.0]), Vector([0.0, 0.0, 0.0]), yellow)
+    sun = MaterialPoint(1.98892e30, array([0.0, 0.0, 0.0]), array([0.0, 0.0, 0.0]), array([0.0, 0.0, 0.0]), yellow)
 
-    mercury = MaterialPoint(3.3022e23, Vector([69816900000.0, 0.0, 0.0]), Vector([0.0, -47870, 0.0]), Vector([0.0, 0.0, 0.0]), yellow)
+    mercury = MaterialPoint(3.3022e23, array([69816900000.0, 0.0, 0.0]), array([0.0, -47870, 0.0]), array([0.0, 0.0, 0.0]), yellow)
     
-    earth = MaterialPoint(5.9742e24, Vector([152098232000.0, 0.0, 0.0]), Vector([0.0, -29000.78, 0.0]), Vector([0.0, 0.0, 0.0]), blue)
+    earth = MaterialPoint(5.9742e24, array([152098232000.0, 0.0, 0.0]), array([0.0, -29000.78, 0.0]), array([0.0, 0.0, 0.0]), blue)
+    moon = MaterialPoint(7.3477e22, array([152098232000.0 + 362570000, 0.0, 0.0]), array([0.0, -29000.78 + 1022, 0.0]), array([0.0, 0.0, 0.0]),white)
 
-    venus = MaterialPoint(4.8685e24, Vector([108942109000.0, 0.0, 0.0]), Vector([0.0, -35000.02, 0.0]), Vector([0.0, 0.0, 0.0]), green)
+    venus = MaterialPoint(4.8685e24, array([108942109000.0, 0.0, 0.0]), array([0.0, -35000.02, 0.0]), array([0.0, 0.0, 0.0]), green)
 
-    mars = MaterialPoint(6.4185e23, Vector([206644545000.0, 0.0, 0.0]), Vector([0.0, -26499, 0.0]), Vector([0.0, 0.0, 0.0]),red)
+    mars = MaterialPoint(6.4185e23, array([206644545000.0, 0.0, 0.0]), array([0.0, -26499, 0.0]), array([0.0, 0.0, 0.0]),red)
 
+    jupiter = MaterialPoint(1.8986e27, array([816520800000.0, 0.0, 0.0]), array([0.0, -13070, 0.0]), array([0.0, 0.0, 0.0]), yellow)
 
+    saturn = MaterialPoint(5.6846e26, array([1503983449000.0, 0.0, 0.0]), array([0.0, -9638, 0.0]), array([0.0, 0.0, 0.0]), yellow)
 
-    moon = MaterialPoint(7.3477e22, Vector([152098232000.0 + 362570000, 0.0, 0.0]), Vector([0.0, -29000.78 + 1022, 0.0]), Vector([0.0, 0.0, 0.0]),white)
-
-    bodies = [sun, mercury, venus, earth, mars, moon]
+ 
+    
+    bodies = [sun, mercury, venus, earth, mars, jupiter, saturn]
 
     gamma = 6.67300e-11 # m3 kg-1 s-2
     
     t = 0.0
-    dt = 6000
+    dt = 20000
     i = 0    
     running = True
     
@@ -169,13 +172,13 @@ def main():
                 running = False
 
         if(i%(30) == 0):
-            space.Clear()    
+            #space.Clear()    
             space.DrawPoints(bodies)
             #print "Earth velocity = ", sqrt(earth.v*earth.v) / 1000, "km/s"
             #print "Time = ", t / 3600 / 24 / 365, "yrs"
 
         for bodie1 in bodies:
-            bodie1.a = Vector([0.0, 0.0, 0.0])
+            bodie1.a = array([0.0, 0.0, 0.0])
             for bodie2 in bodies:
                 if bodie2 != bodie1:
                     r = bodie2.r - bodie1.r
