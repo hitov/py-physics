@@ -21,9 +21,10 @@
 #       MA 02110-1301, USA.
 
 from numpy import *
-
 import pygame
-
+from pygame.locals import *
+from OpenGL.GL import *
+from OpenGL.GLU import *
 
 class array:
     def __init__(self, data):
@@ -122,6 +123,62 @@ class DisplaySpace:
     def Clear(self):
         self.screen.fill([0,0,0])
 
+class DisplaySpaceGl:
+    def __init__(self, x_real_size, y_real_size, z_real_size, x_view_size = 640, y_view_size = 480, z_view_size = 100, color = (0, 255, 0)):
+        self.x_real_size = x_real_size
+        self.y_real_size = y_real_size        
+        self.z_real_size = z_real_size
+        self.x_view_size = x_view_size
+        self.y_view_size = y_view_size
+        self.z_view_size = z_view_size
+        self.color = color
+        
+        pygame.init()
+        self.screen = pygame.display.set_mode( (self.x_view_size, self.y_view_size), HWSURFACE | OPENGL | DOUBLEBUF )
+        
+        glViewport( 0, 0, self.x_view_size, self.y_view_size )
+
+        glShadeModel( GL_SMOOTH )
+        glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST )
+        viewport = glGetIntegerv( GL_VIEWPORT )
+
+        glMatrixMode( GL_PROJECTION )
+        glLoadIdentity( )
+        gluPerspective( 60.0, float( viewport[ 2 ] ) / float( viewport[ 3 ] ), 0.1, 1000.0 )
+        glMatrixMode( GL_MODELVIEW )
+        glLoadIdentity( )
+    
+    def DrawPoint(self, x, y, z, color):
+        px = int((self.x_view_size/self.x_real_size)*x) #+ self.x_view_size/2
+        py = int((self.y_view_size/self.y_real_size)*y) #+ self.y_view_size/2
+        pz = int((self.z_view_size/self.z_real_size)*z) #+ self.z_view_size/2
+        
+        #pygame.draw.circle(self.screen, color, (px, py), 1, 1)
+        # Draw x-axis line.
+        glColor3f( 1, 0, 0 )
+
+        # Position camera to look at the world origin.
+        #gluLookAt( 5, 5, 5, 0, 0, 0, 0, 0, 1 )
+        
+        glTranslatef(px, py, pz)
+        
+        sphere = gluNewQuadric()
+        gluSphere(sphere,15,30,30)
+    
+    def DrawPoints(self, points):
+        glLoadIdentity( )
+        # Position camera to look at the world origin.
+        gluLookAt( self.x_view_size/2, self.y_view_size/2, self.z_view_size/2, 0, 0, 0, 0, 0, 1 )
+        for p in points:
+            self.DrawPoint(p.r[0], p.r[1], p.r[2], p.color)
+        glFlush()
+        pygame.display.flip()
+
+    def Clear(self):
+        glClearColor( 0, 0, 0, 1 )
+        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
+        glLoadIdentity( )
+
 class MaterialPoint():
     def __init__(self, mass, position, velocity, acceleration, color = (0,255,0)):
         self.m = mass
@@ -138,7 +195,7 @@ def main():
     yellow = (255,255,0)
     white = (255,255,255)
 
-    space = DisplaySpace(22*152098232000.0,22*152098232000.0,0)
+    space = DisplaySpaceGl(4*152098232000.0,4*152098232000.0,4*152098232000.0)
 
     sun = MaterialPoint(1.98892e30, array([0.0, 0.0, 0.0]), array([0.0, 0.0, 0.0]), array([0.0, 0.0, 0.0]), yellow)
 
@@ -157,12 +214,14 @@ def main():
 
  
     
-    bodies = [sun, mercury, venus, earth, mars, jupiter, saturn]
+    #bodies = [sun, mercury, venus, earth, mars, jupiter, saturn]
 
+    bodies = [sun, mercury, venus, earth]
+    
     gamma = 6.67300e-11 # m3 kg-1 s-2
     
     t = 0.0
-    dt = 20000
+    dt = 2000
     i = 0    
     running = True
     
@@ -171,8 +230,8 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-        if(i%(30) == 0):
-            #space.Clear()    
+        if(i%(1) == 0):
+            space.Clear()    
             space.DrawPoints(bodies)
             #print "Earth velocity = ", sqrt(earth.v*earth.v) / 1000, "km/s"
             #print "Time = ", t / 3600 / 24 / 365, "yrs"
@@ -189,6 +248,8 @@ def main():
 
         t += dt
         i += 1
+        
+
     return 0
 
 if __name__ == '__main__':
